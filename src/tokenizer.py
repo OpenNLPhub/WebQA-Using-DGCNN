@@ -4,6 +4,7 @@ import numpy as np
 
 # jieba.enable_paddle()
 jieba.initialize()
+
 jieba.load_userdict(config.vocab_path)
 
 '''
@@ -20,7 +21,9 @@ def get_Map_word_id():
     id2word={ i:word.strip() for i,word in enumerate(lines)}
     return len(lines),word2id,id2word
 
-
+def get_Map_char_id():
+    with open(config.char_path,'r') as f:
+        lines=f.readlines()
 
 def tokenize(sentence):
     return jieba.lcut(sentence,HMM=False,cut_all=False)
