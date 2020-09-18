@@ -1,7 +1,7 @@
 # WebQA-Using-DGCNN
 Reimplementation of DGCNN using PyTorch.
 The idea come from [Jianlin. Su 's Blog](https://spaces.ac.cn/archives/5409)
-DGCNN is based on CNN and simple Attention mechanism.
+Dilate Gated Convolutional Neural Network (DGCNN) is based on CNN and simple Attention mechanism.
 It is very efficient and lightweight, because of no RNN architecture in this model.
 It is designed for WebQA Task specificly.
 
@@ -42,4 +42,6 @@ The stucture of json file:
 |me_train.json|36181|
 |me_validation.json|3018|
 |me_test.json|3024|
+|answer_train.json|140897|
+|no_answer_train.json|307547|
 
