@@ -30,7 +30,6 @@ No char Embedding
 
 
 class data_generator(object):
-
     def __init__(self,data,word2id,char2id,batch_size=config.batch_size):
         self.data=data
         self.batch_size=batch_size
