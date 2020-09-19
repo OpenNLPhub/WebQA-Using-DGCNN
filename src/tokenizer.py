@@ -24,6 +24,10 @@ def get_Map_word_id():
 def get_Map_char_id():
     with open(config.char_path,'r') as f:
         lines=f.readlines()
+    char2id={ word.strip():i for i,word in enumerate(lines)}
+    id2char={ i:word.strip() for i,word in enumerate(lines)}
+    return len(lines),char2id,id2char
+
 
 def tokenize(sentence):
     return jieba.lcut(sentence,HMM=False,cut_all=False)
@@ -53,6 +57,7 @@ def seq_padding(batch_sentence,padding):
     input_ids=np.array([
         np.concatenate([x,[padding]*(max_length-(len(x)))]) if len(x)<max_length else x for x in batch_sentence
     ])
+
     attention_mask=input_ids!=padding
 
     return input_ids,attention_mask
