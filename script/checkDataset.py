@@ -121,13 +121,12 @@ def process(file,outfile):
     
 
     
-    
         
         
 if __name__=='__main__':
     # check_nums()
     # check_no_answer_in_train_data()
-    # pre_process()
+    pre_process()
     process_ann_test_dev()
 
 
