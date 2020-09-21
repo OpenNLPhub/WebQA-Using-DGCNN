@@ -3,8 +3,73 @@ import torch.nn as nn
 import numpy as np
 
 class DGCNN(nn.Module):
-    def __init__(self):
-        pass
+    def __init__(self,word_emb_size,**kwargs):
+        self.h_dim=word_emb_size
+        self.embedding=MixEmbedding(word_emb_size,kwargs['char_file'],kwargs['word_file'])
+        self.question_encoder=nn.Sequential(
+            DilatedGatedConv1D(self.h_dim,dilation=1),
+            DilatedGatedConv1D(self.h_dim,dilation=2),
+            DilatedGatedConv1D(self.h_dim,dilation=1),
+            PoolingAttention(self.h_dim,self.h_dim)
+            )
+        
+        self.envidence_encoder=nn.Sequential(
+            nn.Linear(self.h_dim * 2, self.h_dim,bias=False),
+            DilatedGatedConv1D(self.h_dim,dilation=1),
+            DilatedGatedConv1D(self.h_dim,dilation=2),
+            DilatedGatedConv1D(self.h_dim,dilation=4),
+            DilatedGatedConv1D(self.h_dim,dilation=8),
+            DilatedGatedConv1D(self.h_dim,dilation=16),
+            DilatedGatedConv1D(self.h_dim,dilation=1)
+        )
+
+        self.poolAttention=PoolingAttention(self.h_dim*2,self.h_dim)
+
+        self.context_classifier=nn.Linear(self.h_dim,1)
+        self.start_classfier=nn.Linear(self.h_dim * 2,1)
+        self.end_classfier=nn.Linear(self.h_dim * 2,1)
+
+        self.dropout=nn.Dropout(p=0.1)
+
+    def forward(self,inputs):
+        Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae=inputs
+        q=self.embedding([Qw,Qc])
+        q=self.dropout(q)
+
+        e=self.embedding([Ew,Ec])
+        e=self.dropout(e)
+        max_seq_len_e=e.shape[1]
+
+        qv=self.question_encoder([q,q_mask])
+        #batch_size , word_emb_dim
+        qv=qv.unsqueeze(1).expand(-1,max_seq_len_e,-1)
+        #batch_size , max_seq_len_e , word_emb_dim
+
+        e=torch.cat((e,qv),dim=-1)
+        #concatenate qv into e 
+        # e: batch_size , max_seq_len_e, word_emb_dim * 2
+
+        e = self.envidence_encoder([e,e_mask])
+        # e: batch_size , max_seq_len_e ,  word_emb_dim
+        eq = torch.cat((e,qv),dim=-1)
+        # eq: batch_size , max_seq_len_e , word_emb_dim * 2
+        
+        ev=self.poolAttention([eq,e_mask])
+        # ev: batch_size , word_emb_dim
+
+        # Gate
+        ev1=torch.sigmoid(self.context_classifier(ev1))
+        # ev1 : batch_size , 1
+        ev1=ev1.unsqueeze(1).expand(-1,max_seq_len_e,-1)
+        # ev1 : batch_size, max_seq_len_e, 1
+
+        As_=torch.sigmoid(self.start_classfier(eq))
+        Ae_=torch.sigmoid(self.end_classfier(eq))
+        # As_ , Ae_ : batch_size , max_seq_len_e , 1
+
+        As_,Ae_ = As_ * ev1 ,Ae_ * ev1
+
+        return As_ , Ae_
     
 '''
 X batch_size , max_seq_len, word_emb_dim
@@ -42,13 +107,14 @@ class PoolingAttention(nn.Module):
 
 class MixEmbedding(nn.Module):
 
-    def __init__(self,char_nums,in_dim,word_file):
+    def __init__(self,in_dim,char_file,word_file):
         '''
         '''
         super(MixEmbedding,self).__init__()
-        self.char_nums=char_nums
+        # self.char_nums=char_nums
         self.emb_dim=in_dim
-        self.char_embedding=nn.Embedding(self.char_nums,self.emb_dim,padding_idx=0)
+        #字向量 预训练参数加载
+        self.char_embedding=nn.Embedding.from_pretrained(torch.from_numpy(np.load(char_file)),padding_idx=0)
         
         #词向量加载 并冻结参数
         self.word_embedding=nn.Embedding.from_pretrained(torch.from_numpy(np.load(word_file)),padding_idx=0)
@@ -68,6 +134,44 @@ class MixEmbedding(nn.Module):
         word=self.word_linear(word)
 
         return word+char
+
+
+class DilatedGatedConv1D(nn.Module):
+    '''
+    DGCNN
+    '''
+
+    def __init__(self,h_dim,dilation,k_size=3,drop_gate=0.1):
+        super(DilatedGatedConv1D,self).__init__()
+        self.h_dim = h_dim
+        self.dilation = dilation
+        self.kernal_size = k_size
+        self.dropout=nn.Dropout(p=drop_gate)
+        self.padding=self.dilation *(self.kernal_size-1)/2
+        #input  batch_size , Channel_in , seq_len
+        self.conv1=nn.Conv1d(in_channels=self.h_dim,out_channels=self.h_dim,\
+            kernal_size=self.kernal_size,dilation=dilation,padding=self.padding)
+        self.conv2=nn.Conv1d(in_channels=self.h_dim,out_channels=self.h_dim,\
+            kernal_size=self.kernal_size,dilation=dilation,padding=self.padding)
+
+    def forward(self,inputs):
+        x,mask=inputs
+        #mask 部分置0
+        x=x*mask
+        # x,mask: batch_size , word_emb_size , seq_max_len
+
+        x1=self.conv1(x)
+        x2=self.conv2(x)
+        # batch_size , word_emb_size, seq_max_len
+
+        x2=self.dropout(x2)
+        x2=torch.sigmoid(x2)
+
+        #add resnet and multiply a gate for this resnet layer
+        xx=(1-x2)* x + x2 * x1
+
+        return [xx,mask]
+
 
 
 

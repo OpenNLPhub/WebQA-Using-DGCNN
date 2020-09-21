@@ -1,6 +1,7 @@
 import jieba
 import config
 import numpy as np
+import torch
 
 # jieba.enable_paddle()
 jieba.initialize()
@@ -47,6 +48,7 @@ def sent2id(batch_sentence,word2id):
         a=np.array(id_list)
         ans.append(id_list)
     input_ids,attention_mask=seq_padding(ans,padding=PAD)
+
     return input_ids,attention_mask
     
 
@@ -58,6 +60,6 @@ def seq_padding(batch_sentence,padding):
         np.concatenate([x,[padding]*(max_length-(len(x)))]) if len(x)<max_length else x for x in batch_sentence
     ])
 
-    attention_mask=input_ids!=padding
+    attention_mask=np.where(input_ids!=padding,1,0)
 
     return input_ids,attention_mask

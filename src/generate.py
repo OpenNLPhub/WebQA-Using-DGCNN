@@ -4,29 +4,20 @@ import numpy as np
 from tokenizer import seq_padding,sent2id,tokenize
 import random
 import re
+import torch
 '''
 Only Word Embedding
 No char Embedding
 '''
 
 
-# def find_index(e,a):
-#     '''
-#     e: list of str ['今天','是','星期五']
-#     a: list of str ['星期五']
-#     Retruns:
-#     the index of sub str a in e
-#     '''
-#     SEP="##@@##"
-#     e_str=SEP.join(e)
-#     a_str=SEP.join(a)
-#     f=e_str.find(a_str)
-#     i=0
-#     head=0
-#     while i<=f:
-#         if e_str[i:i+len(SEP)]==SEP:
-
-
+def alignWord2Char(q_word):
+    ans=[]
+    for word in q_word:
+        l=[ word for i in list(word)]
+        ans.extend(l)
+    return ans
+        
 
 
 class data_generator(object):
@@ -53,13 +44,21 @@ class data_generator(object):
                 #question
                 q=item['question']
                 q_char=list(q)
+                #重复单词个数，使q_char 和 q_word 保持相同的长度
                 q_word=tokenize(q)
+                q_word=alignWord2Char(q_word)
+                assert len(q_char)==len(q_word)
+                
+                
+                
                 
                 #evidence
                 e=item['evidence']
                 e_char=list(q)
                 e_word=tokenize(e)
-
+                e_word=alignWord2Char(e_word)
+                assert len(e_char)==len(e_word)
+                
                 #answer
                 a=item['answer']
                 a=random.choice(a)
@@ -78,15 +77,30 @@ class data_generator(object):
                 Ae.append(a2)
 
                 if len(Qc)==self.batch_size or i==idxs[-1]:
-                    Qc=sent2id(Qc,self.char2id)
-                    Qw=sent2id(Qw,self.word2id)
+                    Qc,q_mask=sent2id(Qc,self.char2id)
+                    Qw,q_mask_=sent2id(Qw,self.word2id)
+                    assert q_mask==q_mask_
 
-                    Ec=sent2id(Ec,self.char2id)
-                    Ew=sent2id(Ew,self.word2id)
+                    Ec,e_mask=sent2id(Ec,self.char2id)
+                    Ew,e_mask_=sent2id(Ew,self.word2id)
+                    assert e_mask==e_mask_
 
-                    As=seq_padding(As,0)
-                    Ae=seq_padding(Ae,0)
-                    yield Qc,Qw,Ec,Ew,As,Ae
+
+                    As,a_mask=seq_padding(As,0)
+                    Ae,_=seq_padding(Ae,0)
+                    assert e_mask==a_mask
+
+                    totensor=lambda x: torch.from_numpy(np.array(x))
+                    q_mask=totensor(q_mask).long()
+                    e_mask=totensor(e_mask).long()
+                    Qc=totensor(Qc).long()
+                    Qw=totensor(Qw).long()
+                    Ec=totensor(Ec).long()
+                    Ew=totensor(Ew).long()
+                    As=totensor(As).float()
+                    Ae=totensor(As).float()
+
+                    yield Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae,
                     Qc,Qw,Ec,Ew,As,Ae=[],[],[],[],[],[]
 
 if __name__=='__main__':
