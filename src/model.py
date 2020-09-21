@@ -6,6 +6,7 @@ class DGCNN(nn.Module):
     def __init__(self,word_emb_size,**kwargs):
         self.h_dim=word_emb_size
         self.embedding=MixEmbedding(word_emb_size,kwargs['char_file'],kwargs['word_file'])
+        
         self.question_encoder=nn.Sequential(
             DilatedGatedConv1D(self.h_dim,dilation=1),
             DilatedGatedConv1D(self.h_dim,dilation=2),
@@ -32,7 +33,7 @@ class DGCNN(nn.Module):
         self.dropout=nn.Dropout(p=0.1)
 
     def forward(self,inputs):
-        Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae=inputs
+        Qc,Qw,q_mask,Ec,Ew,e_mask=inputs
         q=self.embedding([Qw,Qc])
         q=self.dropout(q)
 
@@ -70,6 +71,9 @@ class DGCNN(nn.Module):
         As_,Ae_ = As_ * ev1 ,Ae_ * ev1
 
         return As_ , Ae_
+    
+
+
     
 '''
 X batch_size , max_seq_len, word_emb_dim

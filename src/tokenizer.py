@@ -2,7 +2,7 @@ import jieba
 import config
 import numpy as np
 import torch
-
+from utils import alignWord2Char
 # jieba.enable_paddle()
 jieba.initialize()
 
