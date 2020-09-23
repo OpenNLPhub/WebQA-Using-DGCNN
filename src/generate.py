@@ -6,18 +6,14 @@ import random
 import re
 import torch
 from utils import alignWord2Char
-'''
-Only Word Embedding
-No char Embedding
-'''
+import json
 
-
-
-        
 
 
 class data_generator(object):
-    def __init__(self,data,word2id,char2id,batch_size=config.batch_size):
+    def __init__(self,data_file,word2id,char2id,batch_size=config.batch_size):
+        with open(data_file,'r') as f:
+            data=json.loads(f.read())
         self.data=data
         self.batch_size=batch_size
         self.steps=len(self.data) // self.batch_size
