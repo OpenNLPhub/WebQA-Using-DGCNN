@@ -10,6 +10,7 @@ from log import logger
 from copy import deepcopy
 from tabulate import tabulate
 
+
 class Model(object):
     def __init__(self):
         self.device= 'cuda:1' if torch.cuda.is_available() else 'cpu'
@@ -24,12 +25,13 @@ class Model(object):
         self.optimizer=optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()),\
             lr=self.lr,momentum=0.9)
 
-        self.best_model=None
+        self.best_model=DGCNN(128,char_file=config.char_embedding_path,\
+            word_file=config.word_embedding_path).to(self.device)
         self._val_loss=-1e12
 
     def train(self,train_data,dev_data,threshold=0.1):
+        self.model.train()
         for epoch in self.epoches:
-            self.model.train()
             for i,item in enumerate(train_data):
                 self.optimizer.zero_grad()
                 Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae = [i.to(self.device) for i in item]
@@ -109,11 +111,13 @@ class Model(object):
             self._val_loss=l
             self.best_model=deepcopy(self.model)
 
-    def load_model(self):
-        pass
+    def load_model(self,PATH):
+        self.best_model.load_state_dict(torch.load(PATH))
+        self.best_model.eval()
 
-    def save_model(self):
-        pass
+    def save_model(self,PATH):
+        torch.save(self.best_model.state_dict(),PATH)
+        logger.info('save best model successfully')
 
     '''
     这里的Data是指含有原始文本的数据List[ dict ]
