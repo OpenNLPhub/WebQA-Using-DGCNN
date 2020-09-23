@@ -6,10 +6,12 @@ cwd=os.getcwd()
 
 
 '''----------------------- Path Config ----------------------------'''
+wv_baidu_path=os.path.join(cwd,'data','ChineseWordVec_baike','word2vec_baike')
 
 #pretraind data path
-char_path = os.path.join(cwd,'data','ChineseWordVec_baike','char.txt')
 vocab_path = os.path.join(cwd,'data','ChineseWordVec_baike','vocab.txt')
+char_path = os.path.join(cwd,'data','ChineseWordVec_baike','char2id.pkl')
+word_path = os.path.join(cwd,'data','ChineseWordVec_baike','word2id.pkl')
 word_embedding_path = os.path.join(cwd,"data","ChineseWordVec_baike",'word_embedding.npy')
 char_embedding_path = os.path.join(cwd,"data","ChineseWordVec_baike",'char_embedding.npy')
 

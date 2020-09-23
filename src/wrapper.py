@@ -38,7 +38,7 @@ class Model(object):
                 As_, Ae_ = self.model([Qc,Qw,q_mask,Ec,Ew,e_mask])
                 As_loss=focal_loss(As,As_)
                 Ae_loss=focal_loss(Ae,Ae_)
-                # batch_size, max_seq_len_e , 1
+                # batch_size, max_seq_len_e 
                 
                 mask=e_mask==1
                 loss=(As_loss.masked_select(mask).sum()+Ae_loss.masked_select(mask).sum()) / e_mask.sum()

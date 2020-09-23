@@ -19,7 +19,7 @@ def run():
         M.train(train_data,dev_data)
     M.test(test_data)
 
-    with open(config.test_text_path,'r') as f:
+    with open(config.test_text_path,'r',encoding='utf-8') as f:
         test_text_data=json.loads(f.read())
     M.get_test_answer(test_text_data,word2id,char2id)
 

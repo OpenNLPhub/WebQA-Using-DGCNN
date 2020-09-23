@@ -3,7 +3,8 @@ import config
 import numpy as np
 import torch
 from utils import alignWord2Char
-
+import gensim
+import pickle
 # jieba.enable_paddle()
 jieba.initialize()
 
@@ -17,18 +18,21 @@ Returns:
 '''
 
 def get_Map_word_id():
-    with open(config.vocab_path,'r',encoding='utf-8') as f:
-        lines=f.readlines()
-    word2id={ word.strip():i for i,word in enumerate(lines)}
-    id2word={ i:word.strip() for i,word in enumerate(lines)}
-    return len(lines),word2id,id2word
+    with open(config.word_path,'rb') as f:
+        word2id=pickle.load(f,encoding='utf-8')
+    return len(word2id),word2id,0
 
 def get_Map_char_id():
-    with open(config.char_path,'r',encoding='utf-8') as f:
-        lines=f.readlines()
-    char2id={ word.strip():i for i,word in enumerate(lines)}
-    id2char={ i:word.strip() for i,word in enumerate(lines)}
-    return len(lines),char2id,id2char
+    with open(config.char_path,'rb') as f:
+        char2id=pickle.load(f,encoding='utf-8')
+    return len(char2id),char2id,0
+
+# def word_char_id():
+#     model=gensim.models.Word2Vec.load(config.wv_baidu_path)
+#     vocab=model.wv.vocab
+#     word2id={'[PAD]':0,'[UNK]':1}
+#     char2id={'[PAD]':0,'[UNK]':1}
+#     for w in tqdm(vocab)
 
 
 def tokenize(sentence):
@@ -67,5 +71,8 @@ def seq_padding(batch_sentence,padding=0):
 
 
 if __name__ == '__main__':
+    import pdb;pdb.set_trace()
     _,word2id,_=get_Map_word_id()
     _,char2id,_=get_Map_char_id()
+    print(len(word2id))
+    print(len(char2id))

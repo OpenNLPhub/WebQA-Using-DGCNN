@@ -14,9 +14,8 @@ class DGCNN(nn.Module):
             DilatedGatedConv1D(self.h_dim,dilation=1),
             PoolingAttention(self.h_dim,self.h_dim)
             )
-        
+        self.linear=nn.Linear(self.h_dim * 2, self.h_dim,bias=False)
         self.envidence_encoder=nn.Sequential(
-            nn.Linear(self.h_dim * 2, self.h_dim,bias=False),
             DilatedGatedConv1D(self.h_dim,dilation=1),
             DilatedGatedConv1D(self.h_dim,dilation=2),
             DilatedGatedConv1D(self.h_dim,dilation=4),
@@ -27,7 +26,7 @@ class DGCNN(nn.Module):
 
         self.poolAttention=PoolingAttention(self.h_dim*2,self.h_dim)
 
-        self.context_classifier=nn.Linear(self.h_dim,1)
+        self.context_classifier=nn.Linear(self.h_dim * 2,1)
         self.start_classfier=nn.Linear(self.h_dim * 2,1)
         self.end_classfier=nn.Linear(self.h_dim * 2,1)
 
@@ -50,27 +49,31 @@ class DGCNN(nn.Module):
         e=torch.cat((e,qv),dim=-1)
         #concatenate qv into e 
         # e: batch_size , max_seq_len_e, word_emb_dim * 2
-
-        e = self.envidence_encoder([e,e_mask])
+        e = self.linear(e)
+        # e: batch_size , max_seq_len_e, word_emb_dim
+        e, _= self.envidence_encoder([e,e_mask])
         # e: batch_size , max_seq_len_e ,  word_emb_dim
         eq = torch.cat((e,qv),dim=-1)
         # eq: batch_size , max_seq_len_e , word_emb_dim * 2
         
         ev=self.poolAttention([eq,e_mask])
-        # ev: batch_size , word_emb_dim
+        # ev: batch_size , word_emb_dim * 2
 
         # Gate
-        ev1=torch.sigmoid(self.context_classifier(ev1))
+        ev1 = torch.sigmoid(self.context_classifier(ev))
         # ev1 : batch_size , 1
-        ev1=ev1.unsqueeze(1).expand(-1,max_seq_len_e,-1)
+        ev1 = ev1.unsqueeze(1).expand(-1,max_seq_len_e,-1)
         # ev1 : batch_size, max_seq_len_e, 1
 
-        As_=torch.sigmoid(self.start_classfier(eq))
-        Ae_=torch.sigmoid(self.end_classfier(eq))
+        As_ = torch.sigmoid(self.start_classfier(eq))
+        Ae_ = torch.sigmoid(self.end_classfier(eq))
         # As_ , Ae_ : batch_size , max_seq_len_e , 1
 
         As_,Ae_ = As_ * ev1 ,Ae_ * ev1
 
+        As_ = As_.squeeze(-1)
+        Ae_ = Ae_.squeeze(-1)
+        # As_ , Ae_ : batch_size , max_seq_len_e
         return As_ , Ae_
     
 
@@ -92,13 +95,15 @@ class PoolingAttention(nn.Module):
         self.map2=nn.Linear(self.h_dim,1,bias=False)
         self.MAX=torch.from_numpy(np.array(-1e12)).float()
     def forward(self,inputs):
+        # import pdb;pdb.set_trace()
         x,attention_mask=inputs
         xo=self.map2(self.activate(self.map(x)))
         # batch_size, max_seq_len, 1
 
         attention_mask=attention_mask.unsqueeze(-1)
         #set padding attention value to negative infanitive
-        xo=torch.where(attention_mask,xo,self.MAX)
+        m=self.MAX
+        xo=torch.where(attention_mask==1,xo,m.to(x.device))
         # batch_size, max_seq_len,1
 
         xo=torch.softmax(xo,axis=1)
@@ -152,7 +157,7 @@ class DilatedGatedConv1D(nn.Module):
         self.dilation = dilation
         self.kernel_size = k_size
         self.dropout=nn.Dropout(p=drop_gate)
-        self.padding=self.dilation *(self.kernel_size-1)/2
+        self.padding=self.dilation *(self.kernel_size-1)//2
         #input  batch_size , Channel_in , seq_len
         self.conv1=nn.Conv1d(in_channels=self.h_dim,out_channels=self.h_dim,\
             kernel_size=self.kernel_size,dilation=dilation,padding=self.padding)
@@ -161,8 +166,14 @@ class DilatedGatedConv1D(nn.Module):
 
     def forward(self,inputs):
         x,mask=inputs
-        #mask 部分置0
-        x=x*mask
+        #x batch_size , seq_max_len , word_emb_size
+        #mask 部分置0 batch_size , seq_max_len
+        
+        x=x.permute(0,2,1).contiguous()
+        # batch_size , word_emb_size , seq_max_len
+        mask_=mask.unsqueeze(1).expand(-1,x.shape[1],-1)
+        
+        x=x*mask_
         # x,mask: batch_size , word_emb_size , seq_max_len
 
         x1=self.conv1(x)
@@ -174,7 +185,8 @@ class DilatedGatedConv1D(nn.Module):
 
         #add resnet and multiply a gate for this resnet layer
         xx=(1-x2)* x + x2 * x1
-
+        #batch_size , word_emb_size, seq_max_len
+        xx=xx.permute(0,2,1).contiguous()
         return [xx,mask]
 
 
