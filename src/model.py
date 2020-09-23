@@ -152,7 +152,7 @@ class DilatedGatedConv1D(nn.Module):
         self.dilation = dilation
         self.kernel_size = k_size
         self.dropout=nn.Dropout(p=drop_gate)
-        self.padding=self.dilation *(self.kernal_size-1)/2
+        self.padding=self.dilation *(self.kernel_size-1)/2
         #input  batch_size , Channel_in , seq_len
         self.conv1=nn.Conv1d(in_channels=self.h_dim,out_channels=self.h_dim,\
             kernel_size=self.kernel_size,dilation=dilation,padding=self.padding)
