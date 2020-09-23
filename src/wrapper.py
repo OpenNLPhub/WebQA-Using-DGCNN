@@ -111,6 +111,7 @@ class Model(object):
             self._val_loss=l
             self.best_model=deepcopy(self.model)
 
+
     def load_model(self,PATH):
         self.best_model.load_state_dict(torch.load(PATH))
         self.best_model.eval()
@@ -214,7 +215,8 @@ class Model(object):
 
 
 
-
+if __name__ == '__main__':
+    pass
 
 
 

@@ -23,7 +23,7 @@ test_raw_ir_path = os.path.join(raw_data_root,'me_test.ir.json')
 dev_raw_ann_path = os.path.join(raw_data_root,'me_validation.ann.json')
 dev_raw_ir_path = os.path.join(raw_data_root,'me_validation.ir.json')
 
-dataset_root = os.path.join(cwd,'data','datset')
+dataset_root = os.path.join(cwd,'data','dataset')
 train_path = os.path.join(dataset_root,'train.json')
 dev_path = os.path.join(dataset_root,'dev.json')
 test_path = os.path.join(dataset_root,'test.json')
@@ -31,8 +31,8 @@ test_text_path =  os.path.join(dataset_root,'test_text.json')
 
 
 #Model Path
-
 model_path=os.path.join(cwd,'result','dgcnn.pth')
+
 '''----------------------- Training Config ----------------------------'''
 
 batch_size=32

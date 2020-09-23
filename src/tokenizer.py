@@ -53,7 +53,7 @@ def sent2id(batch_sentence,word2id):
     return input_ids,attention_mask
     
 
-def seq_padding(batch_sentence,padding):
+def seq_padding(batch_sentence,padding=0):
     len_lists=[ len(i) for i in batch_sentence]
     max_length=max(len_lists)
 

@@ -42,7 +42,7 @@ class data_generator(object):
             
             #evidence
             e=item['evidence']
-            e_char=list(q)
+            e_char=list(e)
             e_word=tokenize(e)
             e_word=alignWord2Char(e_word)
             assert len(e_char)==len(e_word)
@@ -65,19 +65,21 @@ class data_generator(object):
             As.append(a1)
             Ae.append(a2)
 
+            
             if len(Qc)==self.batch_size or i==idxs[-1]:
+                # import pdb;pdb.set_trace()
                 Qc,q_mask=sent2id(Qc,self.char2id)
                 Qw,q_mask_=sent2id(Qw,self.word2id)
-                assert torch.all(q_mask==q_mask_)
+                assert np.all(q_mask==q_mask_)
 
                 Ec,e_mask=sent2id(Ec,self.char2id)
                 Ew,e_mask_=sent2id(Ew,self.word2id)
-                assert torch.all(e_mask==e_mask_)
+                assert np.all(e_mask==e_mask_)
 
-
-                As,a_mask=seq_padding(As,0)
+                # import pdb;pdb.set_trace()
+                As,_=seq_padding(As,0)
                 Ae,_=seq_padding(Ae,0)
-                assert torch.all(e_mask==a_mask)
+                # answer padding == evidence padding
 
                 totensor=lambda x: torch.from_numpy(np.array(x))
                 q_mask=totensor(q_mask).long()
@@ -93,14 +95,22 @@ class data_generator(object):
                 Qc,Qw,Ec,Ew,As,Ae=[],[],[],[],[],[]
 
 if __name__=='__main__':
-    pass
+    #debug Test
+    from tokenizer import get_Map_char_id,get_Map_word_id
+    _, word2id, _ = get_Map_word_id()
+    _, char2id, _ = get_Map_char_id()
+    train_data=data_generator(config.train_path,word2id,char2id)
+    import pdb;pdb.set_trace()
+    for idx,item in enumerate(train_data):
+        Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae = item
+
             
 
 
 
 
                 
-
+ 
 
 
 
