@@ -12,7 +12,7 @@ import json
 
 class data_generator(object):
     def __init__(self,data_file,word2id,char2id,batch_size=config.batch_size):
-        with open(data_file,'r') as f:
+        with open(data_file,'r',encoding='utf-8') as f:
             data=json.loads(f.read())
         self.data=data
         self.batch_size=batch_size

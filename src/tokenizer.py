@@ -17,14 +17,14 @@ Returns:
 '''
 
 def get_Map_word_id():
-    with open(config.vocab_path,'r') as f:
+    with open(config.vocab_path,'r',encoding='utf-8') as f:
         lines=f.readlines()
     word2id={ word.strip():i for i,word in enumerate(lines)}
     id2word={ i:word.strip() for i,word in enumerate(lines)}
     return len(lines),word2id,id2word
 
 def get_Map_char_id():
-    with open(config.char_path,'r') as f:
+    with open(config.char_path,'r',encoding='utf-8') as f:
         lines=f.readlines()
     char2id={ word.strip():i for i,word in enumerate(lines)}
     id2char={ i:word.strip() for i,word in enumerate(lines)}
@@ -64,3 +64,8 @@ def seq_padding(batch_sentence,padding=0):
     attention_mask=np.where(input_ids!=padding,1,0)
 
     return input_ids,attention_mask
+
+
+if __name__ == '__main__':
+    _,word2id,_=get_Map_word_id()
+    _,char2id,_=get_Map_char_id()
