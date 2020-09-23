@@ -4,6 +4,7 @@ import numpy as np
 
 class DGCNN(nn.Module):
     def __init__(self,word_emb_size,**kwargs):
+        super(DGCNN,self).__init__()
         self.h_dim=word_emb_size
         self.embedding=MixEmbedding(word_emb_size,kwargs['char_file'],kwargs['word_file'])
         
@@ -149,14 +150,14 @@ class DilatedGatedConv1D(nn.Module):
         super(DilatedGatedConv1D,self).__init__()
         self.h_dim = h_dim
         self.dilation = dilation
-        self.kernal_size = k_size
+        self.kernel_size = k_size
         self.dropout=nn.Dropout(p=drop_gate)
         self.padding=self.dilation *(self.kernal_size-1)/2
         #input  batch_size , Channel_in , seq_len
         self.conv1=nn.Conv1d(in_channels=self.h_dim,out_channels=self.h_dim,\
-            kernal_size=self.kernal_size,dilation=dilation,padding=self.padding)
+            kernel_size=self.kernel_size,dilation=dilation,padding=self.padding)
         self.conv2=nn.Conv1d(in_channels=self.h_dim,out_channels=self.h_dim,\
-            kernal_size=self.kernal_size,dilation=dilation,padding=self.padding)
+            kernel_size=self.kernel_size,dilation=dilation,padding=self.padding)
 
     def forward(self,inputs):
         x,mask=inputs
