@@ -119,10 +119,10 @@ class MixEmbedding(nn.Module):
         # self.char_nums=char_nums
         self.emb_dim=in_dim
         #字向量 预训练参数加载
-        self.char_embedding=nn.Embedding.from_pretrained(torch.from_numpy(np.load(char_file)),padding_idx=0)
-        
+        self.char_embedding=nn.Embedding.from_pretrained(torch.from_numpy(np.load(char_file)),padding_idx=0).float()
+
         #词向量加载 并冻结参数
-        self.word_embedding=nn.Embedding.from_pretrained(torch.from_numpy(np.load(word_file)),padding_idx=0)
+        self.word_embedding=nn.Embedding.from_pretrained(torch.from_numpy(np.load(word_file)),padding_idx=0).float()
         for i in self.word_embedding.parameters():
             i.requires_grad=False
 

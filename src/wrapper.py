@@ -13,25 +13,25 @@ from tabulate import tabulate
 
 class Model(object):
     def __init__(self):
-        self.device= 'cuda:1' if torch.cuda.is_available() else 'cpu'
+        self.device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
-        self.model=DGCNN(128,char_file=config.char_embedding_path,\
-            word_file=config.word_embedding_path).to(self.device)
-        self.isTrain=False
-        self.epoches=30
-        self.lr=1e-4
+        self.model = DGCNN(256,char_file = config.char_embedding_path,\
+            word_file = config.word_embedding_path).to(self.device)
+        self.isTrain = False
+        self.epoches = 30
+        self.lr = 1e-4
 
-        self.print_step=15
-        self.optimizer=optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()),\
+        self.print_step = 15
+        self.optimizer = optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()),\
             lr=self.lr,momentum=0.9)
 
-        self.best_model=DGCNN(128,char_file=config.char_embedding_path,\
-            word_file=config.word_embedding_path).to(self.device)
-        self._val_loss=-1e12
+        self.best_model = DGCNN(256,char_file=config.char_embedding_path,\
+            word_file = config.word_embedding_path).to(self.device)
+        self._val_loss = -1e12
 
     def train(self,train_data,dev_data,threshold=0.1):
         self.model.train()
-        for epoch in self.epoches:
+        for epoch in range(self.epoches):
             for i,item in enumerate(train_data):
                 self.optimizer.zero_grad()
                 Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae = [i.to(self.device) for i in item]
