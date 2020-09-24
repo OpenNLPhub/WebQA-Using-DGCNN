@@ -12,8 +12,9 @@ class DGCNN(nn.Module):
             DilatedGatedConv1D(self.h_dim,dilation=1),
             DilatedGatedConv1D(self.h_dim,dilation=2),
             DilatedGatedConv1D(self.h_dim,dilation=1),
-            PoolingAttention(self.h_dim,self.h_dim)
             )
+        self.poolAttention_q=PoolingAttention(self.h_dim,self.h_dim)
+
         self.linear=nn.Linear(self.h_dim * 2, self.h_dim,bias=False)
         self.envidence_encoder=nn.Sequential(
             DilatedGatedConv1D(self.h_dim,dilation=1),
@@ -41,9 +42,15 @@ class DGCNN(nn.Module):
         e=self.dropout(e)
         max_seq_len_e=e.shape[1]
 
-        qv=self.question_encoder([q,q_mask])
+        #q batch_size, max_seq_len_q , word_emb_size
+        q=q.permute(0,2,1).contiguous()
+        qv = self.question_encoder([q,q_mask])
+        #q batch_size, word_emb_size , max_seq_len_q
+        qv = q.permute(0,2,1).contiguous()
+        # batch_size , max_seq_len_q , word_emb_size
+        qv = self.poolAttention_q([qv,q_mask])
         #batch_size , word_emb_dim
-        qv=qv.unsqueeze(1).expand(-1,max_seq_len_e,-1)
+        qv = qv.unsqueeze(1).expand(-1,max_seq_len_e,-1)
         #batch_size , max_seq_len_e , word_emb_dim
 
         e=torch.cat((e,qv),dim=-1)
@@ -51,8 +58,13 @@ class DGCNN(nn.Module):
         # e: batch_size , max_seq_len_e, word_emb_dim * 2
         e = self.linear(e)
         # e: batch_size , max_seq_len_e, word_emb_dim
+        e = e.permute(0,2,1).contiguous()
+        # e: batch_size , word_emb_dim , max_seq_len_e
         e, _= self.envidence_encoder([e,e_mask])
-        # e: batch_size , max_seq_len_e ,  word_emb_dim
+        # e: batch_size , word_emb_dim , max_seq_len_e 
+        e = e.permute(0,2,1).contiguous()
+        # e: batch_size , max_seq_len_e, word_emb_dim
+
         eq = torch.cat((e,qv),dim=-1)
         # eq: batch_size , max_seq_len_e , word_emb_dim * 2
         
@@ -166,10 +178,10 @@ class DilatedGatedConv1D(nn.Module):
 
     def forward(self,inputs):
         x,mask=inputs
-        #x batch_size , seq_max_len , word_emb_size
+        #x batch_size , word_emb_size , seq_max_len
         #mask 部分置0 batch_size , seq_max_len
         
-        x=x.permute(0,2,1).contiguous()
+        # x=x.permute(0,2,1).contiguous()
         # batch_size , word_emb_size , seq_max_len
         mask_=mask.unsqueeze(1).expand(-1,x.shape[1],-1)
         
@@ -186,7 +198,7 @@ class DilatedGatedConv1D(nn.Module):
         #add resnet and multiply a gate for this resnet layer
         xx=(1-x2)* x + x2 * x1
         #batch_size , word_emb_size, seq_max_len
-        xx=xx.permute(0,2,1).contiguous()
+        # xx=xx.permute(0,2,1).contiguous()
         return [xx,mask]
 
 

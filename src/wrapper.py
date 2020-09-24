@@ -17,7 +17,6 @@ class Model(object):
 
         self.model = DGCNN(256,char_file = config.char_embedding_path,\
             word_file = config.word_embedding_path).to(self.device)
-        self.isTrain = False
         self.epoches = 30
         self.lr = 1e-4
 
@@ -36,8 +35,8 @@ class Model(object):
                 self.optimizer.zero_grad()
                 Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae = [i.to(self.device) for i in item]
                 As_, Ae_ = self.model([Qc,Qw,q_mask,Ec,Ew,e_mask])
-                As_loss=focal_loss(As,As_)
-                Ae_loss=focal_loss(Ae,Ae_)
+                As_loss=focal_loss(As,As_,self.device)
+                Ae_loss=focal_loss(Ae,Ae_,self.device)
                 # batch_size, max_seq_len_e 
                 
                 mask=e_mask==1
@@ -83,7 +82,7 @@ class Model(object):
             As_, Ae_ =  self.model([Qc,Qw,q_mask,Ec,Ew,e_mask])
 
             #cal loss
-            As_loss,Ae_loss=focal_loss(As,As_) ,focal_loss(Ae,Ae_)
+            As_loss,Ae_loss=focal_loss(As,As_,self.device) ,focal_loss(Ae,Ae_,self.device)
             mask=e_mask==1
             loss=(As_loss.masked_select(mask).sum() + Ae_loss.masked_select(mask).sum()) /  e_mask.sum()
             if (i+1)%self.print_step==0 or i==len(dev_data)-1:
