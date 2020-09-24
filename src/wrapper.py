@@ -17,7 +17,7 @@ class Model(object):
 
         self.model = DGCNN(256,char_file = config.char_embedding_path,\
             word_file = config.word_embedding_path).to(self.device)
-        self.epoches = 30
+        self.epoches = 15
         self.lr = 1e-4
 
         self.print_step = 15
@@ -26,11 +26,14 @@ class Model(object):
 
         self.best_model = DGCNN(256,char_file=config.char_embedding_path,\
             word_file = config.word_embedding_path).to(self.device)
-        self._val_loss = -1e12
+        self._val_loss = 1e12
+
+        #Debug
+
 
     def train(self,train_data,dev_data,threshold=0.1):
-        self.model.train()
         for epoch in range(self.epoches):
+            self.model.train()
             for i,item in enumerate(train_data):
                 self.optimizer.zero_grad()
                 Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae = [i.to(self.device) for i in item]
@@ -47,6 +50,10 @@ class Model(object):
                 if (i+1)%self.print_step==0 or i==len(train_data)-1:
                     logger.info("In Training : Epoch : {} \t Step / All Step : {} / {} \t Loss of every char : {}"\
                         .format(epoch+1, i+1,len(train_data),loss.item()*100))
+
+                #debug
+                # if i==2000:
+                #     break
             
             self.model.eval()
             with torch.no_grad():
@@ -77,6 +84,7 @@ class Model(object):
                 
     def validate(self,dev_data,threshold=0.1):
         val_loss=[]
+        import pdb; pdb.set_trace()
         for i, item in enumerate(dev_data):
             Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae = [i.to(self.device) for i in item]
             As_, Ae_ =  self.model([Qc,Qw,q_mask,Ec,Ew,e_mask])
@@ -94,7 +102,7 @@ class Model(object):
             As_,Ae_,As,Ae = [ i.masked_select(mask).cpu().numpy() for i in [As_,Ae_,As,Ae]]
             As_,Ae_ = np.where(As_>threshold,1,0), np.where(Ae_>threshold,1,0)
             As,Ae = As.astype(int),Ae.astype(int)
-            ans=[['start'],['end']]
+            
             acc,prec,recall,f1=binary_confusion_matrix_evaluate(As,As_)
             
             logger.info('START EVALUATION :\t Acc : {}\t Prec : {}\t Recall : {}\t F1-score : {}'\

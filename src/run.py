@@ -4,6 +4,7 @@ from tokenizer import get_Map_char_id,get_Map_word_id
 from wrapper import Model
 import os
 import json
+import torch
 
 def run():
     _, word2id, _ = get_Map_word_id()
@@ -24,4 +25,6 @@ def run():
     M.get_test_answer(test_text_data,word2id,char2id)
 
 if __name__ == '__main__':
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache() 
     run()

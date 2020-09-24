@@ -37,6 +37,6 @@ model_path=os.path.join(cwd,'result','dgcnn.pth')
 
 '''----------------------- Training Config ----------------------------'''
 
-batch_size=64
+batch_size=32
 max_seq_len=256
 
