@@ -29,6 +29,7 @@ if __name__=='__main__':
                     continue
                 if i not in charlist:
                     charlist[i]=1
+                    
     print("char list len:{}".format(len(charlist)))
     chars=list(charlist.keys())
     with open(charlistPath,'w') as f:
