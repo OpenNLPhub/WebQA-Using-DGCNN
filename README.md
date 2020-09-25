@@ -45,3 +45,85 @@ The stucture of json file:
 |answer_train.json|140897|
 |no_answer_train.json|307547|
 
+
+
+### Data Preprocess
+
+ This Raw Data is not convinient for us.  For trainining dataset, I seperate the evidences.Every data item has one question, one evidence and an answer list. Some items have answer but some do not. Their ratio is 1:1。
+
+For validation dataset and test dataset, I just seperate the evidences,keep one item having one question,one evidence and an answer list.
+
+Just Like this:
+
+```json
+[
+  {
+    "question":"世界第一高峰是什么?",
+    "evidence":"世界上的第一高峰是珠穆朗玛峰",
+  	"answer":["珠穆朗玛峰"]
+	},
+  ...
+  {
+    "question":"世界第一高峰是什么?",
+    "evidencee":"武夷山很高",
+    "answer":["no_answer"]
+  }
+]
+```
+
+
+
+### Usage
+
+**Download Dataset and Pretrained word vector**
+
+ (WordVector I use BaiDuBaike https://pan.baidu.com/s/1YYE2T3f-lPyLBrJuUowAsA  Password: 5p0h)
+
+Download them and Place them under data directory
+
+
+
+**Preprocess the WordVector and Dataset**
+
+do
+
+```shell
+python script/buildDataset.py
+
+python script/generateWordVec.py
+```
+
+You will find that
+
+Under *data* directory there is an aditional directory dataset
+
+Under *ChinsesWordVec_baike* directory there are four additional file *word_embedding.npy*, *char_embedding.npy*, *char2id.pkl*, *word2id.pkl*
+
+
+
+**Training and Prediction**
+
+```shell
+python src/run.py
+```
+
+You can find log information in you terminal and log file under log directory.
+
+The trained Model is stored under result directoy.
+
+
+
+### Problem 
+
+I failed to reimplement the expected result of this model.
+
+i found using pointer-label model , the final classifier trends to predict all item to zero.'
+
+Finally, in validation step, the f1-score, recall, precesion are all zero.
+
+**update**
+
+2020/09/24	 proposing a issue in https://github.com/bojone/dgcnn_for_reading_comprehension/issues/5
+
+2020/09/25     try to adjust some random seed to give a shot 2333.
+
