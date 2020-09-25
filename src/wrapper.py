@@ -84,7 +84,7 @@ class Model(object):
                 
     def validate(self,dev_data,threshold=0.1):
         val_loss=[]
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         for i, item in enumerate(dev_data):
             Qc,Qw,q_mask,Ec,Ew,e_mask,As,Ae = [i.to(self.device) for i in item]
             As_, Ae_ =  self.model([Qc,Qw,q_mask,Ec,Ew,e_mask])

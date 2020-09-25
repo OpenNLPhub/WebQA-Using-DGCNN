@@ -43,10 +43,10 @@ class DGCNN(nn.Module):
         max_seq_len_e=e.shape[1]
 
         #q batch_size, max_seq_len_q , word_emb_size
-        q=q.permute(0,2,1).contiguous()
-        qv = self.question_encoder([q,q_mask])
+        q = q.permute(0,2,1).contiguous()
+        qv,_ = self.question_encoder([q,q_mask])
         #q batch_size, word_emb_size , max_seq_len_q
-        qv = q.permute(0,2,1).contiguous()
+        qv = qv.permute(0,2,1).contiguous()
         # batch_size , max_seq_len_q , word_emb_size
         qv = self.poolAttention_q([qv,q_mask])
         #batch_size , word_emb_dim
@@ -181,8 +181,6 @@ class DilatedGatedConv1D(nn.Module):
         #x batch_size , word_emb_size , seq_max_len
         #mask 部分置0 batch_size , seq_max_len
         
-        # x=x.permute(0,2,1).contiguous()
-        # batch_size , word_emb_size , seq_max_len
         mask_=mask.unsqueeze(1).expand(-1,x.shape[1],-1)
         
         x=x*mask_
