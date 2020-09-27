@@ -127,3 +127,9 @@ Finally, in validation step, the f1-score, recall, precesion are all zero.
 
 2020/09/25     try to adjust some random seed to give a shot 2333.
 
+### Requirement
+This repo was tested on Python 3.6.11 and torch 1.5.1+cu101. The main requirements are:
+
+tqdm
+codecs
+torch = 1.5.1+cu101
