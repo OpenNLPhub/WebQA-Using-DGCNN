@@ -17,12 +17,12 @@ class Model(object):
 
         self.model = DGCNN(256,char_file = config.char_embedding_path,\
             word_file = config.word_embedding_path).to(self.device)
-        self.epoches = 15
+        self.epoches = 150
         self.lr = 1e-4
 
         self.print_step = 15
-        self.optimizer = optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()),\
-            lr=self.lr,momentum=0.9)
+        self.optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()),\
+            lr=self.lr)
 
         self.best_model = DGCNN(256,char_file=config.char_embedding_path,\
             word_file = config.word_embedding_path).to(self.device)
